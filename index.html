@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Scatter! – The Category Game</title>
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1828;
+    --card: #211f35;
+    --card2: #2a2845;
+    --accent1: #ff6b6b;
+    --accent2: #ffd93d;
+    --accent3: #6bcb77;
+    --accent4: #4d96ff;
+    --accent5: #c77dff;
+    --text: #fffffe;
+    --text-dim: #a7a5c0;
+    --border: #3a3858;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .screen { display: none; min-height: 100vh; padding: 20px; animation: fadeIn 0.25s ease; }
+  .screen.active { display: flex; flex-direction: column; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  h2 { font-size: clamp(1.4rem, 6vw, 2rem); font-style: italic; }
+  h3 { font-size: 1rem; font-weight: normal; font-style: italic; color: var(--text-dim); }
+
+  .btn {
+    display: block; width: 100%; padding: 18px 24px;
+    font-family: inherit; font-size: 1.05rem; font-style: italic; font-weight: bold;
+    border: none; border-radius: var(--radius-sm); cursor: pointer;
+    transition: transform 0.1s; letter-spacing: 0.3px; min-height: 54px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent2); color: #0f0e17; }
+  .btn-danger  { background: var(--accent1); color: #fff; }
+  .btn-success { background: var(--accent3); color: #0f0e17; }
+  .btn-blue    { background: var(--accent4); color: #fff; }
+  .btn-ghost   { background: transparent; color: var(--text-dim); border: 2px solid var(--border); }
+  .btn-sm      { padding: 12px 16px; font-size: 0.95rem; min-height: 46px; }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
+
+  input[type=text], input[type=number] {
+    width: 100%; padding: 13px 15px;
+    background: var(--card2); border: 2px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: inherit; font-size: 1rem;
+    transition: border-color 0.2s; -webkit-appearance: none;
+  }
+  input[type=text]:focus, input[type=number]:focus { outline: none; border-color: var(--accent4); }
+
+  label { display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .field { margin-bottom: 14px; }
+  .divider { height: 1px; background: var(--border); margin: 18px 0; }
+  .spacer { flex: 1; }
+
+  /* num btn groups */
+  .num-btn-row { display: flex; gap: 7px; }
+  .num-btn {
+    flex: 1; padding: 13px 6px; border: 2px solid var(--border);
+    background: var(--card2); color: var(--text-dim);
+    border-radius: var(--radius-sm); font-family: inherit;
+    font-size: 1rem; cursor: pointer; transition: all 0.12s;
+  }
+  .num-btn.selected { border-color: var(--accent4); color: var(--accent4); background: rgba(77,150,255,0.12); }
+
+  /* WELCOME */
+  #screen-welcome { justify-content: center; align-items: center; text-align: center; gap: 0; padding: 40px 24px; }
+  .logo-dots { margin-bottom: 10px; }
+  .logo-dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin: 0 3px; }
+  .logo-main { font-size: clamp(3.2rem,14vw,5.5rem); font-style: italic; color: var(--accent2); line-height: 1; }
+  .logo-sub  { font-size: clamp(0.8rem,3.5vw,1.1rem); letter-spacing: 4px; font-style: normal; text-transform: uppercase; color: var(--text-dim); margin-top: 6px; }
+  .tagline { color: var(--text-dim); font-style: italic; margin: 18px 0 28px; font-size: 1rem; }
+  #screen-welcome .btn { max-width: 320px; margin: 0 auto 10px; }
+
+  /* SETUP */
+  #screen-setup { padding: 24px; gap: 0; }
+  #screen-setup h2 { margin-bottom: 2px; }
+  #screen-setup h3 { margin-bottom: 18px; }
+  .setup-section { margin-bottom: 18px; }
+  .setup-section > label { margin-bottom: 8px; }
+
+  /* ROUND START */
+  #screen-round-start { justify-content: center; align-items: center; text-align: center; gap: 14px; }
+  .round-label { color: var(--text-dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; }
+  .letter-die {
+    width: 130px; height: 130px;
+    background: linear-gradient(135deg, var(--accent5), var(--accent4));
+    border-radius: 26px; display: flex; align-items: center; justify-content: center;
+    font-size: 5.5rem; font-style: italic; font-weight: bold; color: #fff;
+    box-shadow: 0 10px 36px rgba(77,150,255,0.35);
+    margin: 4px auto;
+  }
+  #screen-round-start .btn { max-width: 320px; width: 100%; }
+
+  /* PASS */
+  #screen-pass { justify-content: center; align-items: center; text-align: center; gap: 18px; }
+  .pass-icon { font-size: 3.8rem; }
+  .pass-player-name { font-size: clamp(1.8rem, 9vw, 3rem); font-style: italic; }
+  #screen-pass p { color: var(--text-dim); max-width: 280px; font-size: 0.95rem; line-height: 1.5; }
+  #screen-pass .btn { max-width: 300px; width: 100%; }
+
+  /* PLAY */
+  #screen-play { padding: 0; gap: 0; }
+  .play-header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); padding: 11px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 11px;
+  }
+  .play-letter-badge {
+    width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent5), var(--accent4));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; font-style: italic; font-weight: bold; color: #fff;
+  }
+  .play-info { flex: 1; min-width: 0; }
+  .play-player-name { font-size: 0.95rem; font-style: italic; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .play-round-info { font-size: 0.72rem; color: var(--text-dim); margin-top: 1px; }
+  .timer-display {
+    font-size: 1.55rem; font-style: italic; font-weight: bold;
+    min-width: 55px; text-align: right;
+    font-variant-numeric: tabular-nums; transition: color 0.3s;
+  }
+  .timer-display.urgent { color: var(--accent1); animation: pulse 0.9s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+  .play-body { padding: 12px 15px 110px; }
+  .category-row { margin-bottom: 9px; }
+  .category-label { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+  .cat-num { color: var(--accent2); font-weight: bold; font-size: 0.83rem; min-width: 20px; }
+  .cat-name { font-size: 0.92rem; }
+
+  .play-footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 11px 15px; background: var(--surface); border-top: 1px solid var(--border);
+  }
+  .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--accent4); border-radius: 2px; transition: width 1s linear, background 0.3s; }
+  .progress-bar.urgent { background: var(--accent1); }
+
+  /* SCORING */
+  #screen-scoring { padding: 0; }
+  .scoring-header { padding: 18px 16px 12px; border-bottom: 1px solid var(--border); }
+  .scoring-header h2 { margin-bottom: 3px; }
+  .scoring-header p { color: var(--text-dim); font-size: 0.88rem; }
+  .scoring-body { padding: 12px 15px 90px; }
+  .scoring-category { margin-bottom: 18px; }
+  .scoring-cat-title {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--accent2); margin-bottom: 7px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .scoring-answers { display: flex; flex-direction: column; gap: 6px; }
+  .scoring-answer-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 11px 13px; border: 2px solid transparent;
+    cursor: pointer; transition: all 0.12s; user-select: none;
+  }
+  .scoring-answer-row.valid { border-color: var(--accent3); background: rgba(107,203,119,0.08); }
+  .scoring-answer-row.duplicate { opacity: 0.45; cursor: default; }
+  .scoring-answer-row.empty { opacity: 0.28; cursor: default; }
+  .answer-check {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 0.88rem; transition: all 0.12s;
+  }
+  .scoring-answer-row.valid .answer-check { background: var(--accent3); border-color: var(--accent3); color: #0f0e17; }
+  .answer-player-name { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 1px; }
+  .answer-text { font-size: 1rem; }
+  .dup-badge   { font-size: 0.68rem; background: rgba(255,107,107,0.18); color: var(--accent1); border: 1px solid rgba(255,107,107,0.35); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .wrong-badge { font-size: 0.68rem; background: rgba(255,107,107,0.18); color: var(--accent1); border: 1px solid rgba(255,107,107,0.35); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .scoring-footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 11px 15px; background: var(--surface); border-top: 1px solid var(--border);
+  }
+
+  /* SCOREBOARD */
+  #screen-scoreboard { padding: 24px; gap: 0; }
+  #screen-scoreboard h2 { margin-bottom: 3px; }
+  .sb-subtitle { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 18px; }
+  .scoreboard-list { margin-bottom: 16px; }
+  .scoreboard-row {
+    display: flex; align-items: center; gap: 13px;
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 15px; margin-bottom: 8px; border: 2px solid transparent;
+  }
+  .scoreboard-row.leader { border-color: var(--accent2); background: rgba(255,217,61,0.06); }
+  .rank { font-size: 1.2rem; width: 28px; color: var(--text-dim); }
+  .sb-name { flex: 1; font-size: 1.05rem; }
+  .sb-score { font-size: 1.45rem; font-style: italic; font-weight: bold; }
+  .sb-round-scores { font-size: 0.72rem; color: var(--text-dim); margin-top: 1px; }
+
+  /* FINAL */
+  #screen-final { justify-content: center; align-items: center; text-align: center; gap: 10px; padding: 32px 24px; }
+  .confetti-row { font-size: 2.4rem; letter-spacing: 6px; }
+  .winner-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); }
+  .winner-name { font-size: clamp(2rem,10vw,3.4rem); font-style: italic; }
+  .winner-score { font-size: 1rem; color: var(--text-dim); }
+  .final-scores { width: 100%; max-width: 380px; margin: 8px auto 0; }
+  #screen-final .btn { max-width: 300px; width: 100%; }
+
+  .color-0 { color: #ff6b6b; }
+  .color-1 { color: #4d96ff; }
+  .color-2 { color: #6bcb77; }
+  .color-3 { color: #c77dff; }
+  .bg-0 { background: #ff6b6b; }
+  .bg-1 { background: #4d96ff; }
+  .bg-2 { background: #6bcb77; }
+  .bg-3 { background: #c77dff; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-20 { margin-top: 20px; }
+
+  /* PAUSE OVERLAY */
+  .pause-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--bg);
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 20px; padding: 32px;
+  }
+  .pause-overlay.active { display: flex; }
+  .pause-icon-big { font-size: 4rem; }
+  .pause-title { font-size: clamp(1.8rem,8vw,2.8rem); font-style: italic; color: var(--accent2); }
+  .pause-sub { color: var(--text-dim); font-size: 0.95rem; max-width: 260px; }
+  .pause-overlay .btn { max-width: 280px; width: 100%; }
+
+  /* MODAL (how to play + stop confirm) */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(0,0,0,0.72);
+    align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal-sheet {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    border-top: 1px solid var(--border);
+    padding: 24px 22px 36px; width: 100%; max-width: 480px;
+    max-height: 88vh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-size: 1.4rem; font-style: italic; margin-bottom: 16px; }
+  .modal-body { color: var(--text-dim); font-size: 0.95rem; line-height: 1.7; }
+  .modal-body strong { color: var(--text); }
+  .modal-body .rule-block { margin-bottom: 14px; }
+  .modal-body .rule-block h4 { color: var(--accent2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  .modal-close { margin-top: 20px; }
+
+  /* PLAY HEADER ICON BUTTONS */
+  .play-icon-btn {
+    width: 38px; height: 38px; border-radius: 8px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+    transition: transform 0.1s, opacity 0.1s;
+    background: var(--card2);
+  }
+  .play-icon-btn:active { transform: scale(0.92); opacity: 0.8; }
+  .play-icon-btn.pause-btn { color: var(--accent2); }
+  .play-icon-btn.stop-btn  { color: var(--accent1); }
+</style>
+</head>
+<body>
+
+<!-- HOW TO PLAY MODAL -->
+<div class="modal-backdrop" id="modal-htp" onclick="closeHtp(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎮 How to Play</div>
+    <div class="modal-body">
+      <div class="rule-block">
+        <h4>Goal</h4>
+        Score points by naming things in 10 categories — every answer must start with that round's letter.
+      </div>
+      <div class="rule-block">
+        <h4>Each Round</h4>
+        A letter is rolled. Players take turns <strong>one at a time in secret</strong> — fill in as many categories as you can before time runs out, then pass the phone. No one else sees your answers until everyone is done.
+      </div>
+      <div class="rule-block">
+        <h4>Scoring</h4>
+        After all players submit, you score together. <strong>Tap an answer to mark it valid</strong> (1 point). If two players wrote the same answer, <strong>neither</strong> scores — duplicates are flagged automatically.
+      </div>
+      <div class="rule-block">
+        <h4>Winning</h4>
+        Most points after all rounds wins. Ties are celebrated equally! 🎉
+      </div>
+      <div class="rule-block">
+        <h4>Tips</h4>
+        Unusual answers are harder to duplicate. Proper nouns count — cities, names, brands all work!
+      </div>
+    </div>
+    <button class="btn btn-primary modal-close" onclick="closeHtpBtn()">Got it!</button>
+  </div>
+</div>
+
+<!-- STOP CONFIRM MODAL -->
+<div class="modal-backdrop" id="modal-stop" onclick="closeStop(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:var(--accent1)">Stop the game?</div>
+    <div class="modal-body">
+      This will end the current game and return to the main menu. All progress will be lost.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+      <button class="btn btn-danger" onclick="confirmStop()">Yes, End Game</button>
+      <button class="btn btn-ghost" onclick="closeStopBtn()">Keep Playing</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div class="pause-overlay" id="pause-overlay">
+  <div class="pause-icon-big">⏸</div>
+  <div class="pause-title">Paused</div>
+  <p class="pause-sub">Answers are hidden. Resume when everyone is ready.</p>
+  <button class="btn btn-primary" onclick="resumeGame()">Resume →</button>
+</div>
+
+<!-- WELCOME -->
+<div id="screen-welcome" class="screen active">
+  <div class="logo-dots">
+    <span class="logo-dot bg-0"></span>
+    <span class="logo-dot bg-1"></span>
+    <span class="logo-dot bg-2"></span>
+  </div>
+  <div class="logo-main">Scatter!</div>
+  <div class="logo-sub">The Category Game</div>
+  <p class="tagline">Think fast. Name everything.</p>
+  <button class="btn btn-primary" onclick="showScreen('screen-setup')">New Game</button>
+  <button class="btn btn-ghost" onclick="openHtp()">How to Play</button>
+</div>
+
+<!-- SETUP -->
+<div id="screen-setup" class="screen">
+  <h2>Game Setup</h2>
+  <h3>Customize your game</h3>
+  <div class="divider"></div>
+
+  <div class="setup-section">
+    <label>Category Mode</label>
+    <div class="num-btn-row">
+      <button class="num-btn selected" data-mode="standard" onclick="selectMode('standard')" style="padding:10px 6px">Standard</button>
+      <button class="num-btn" data-mode="kids" onclick="selectMode('kids')" style="padding:10px 6px">Kids</button>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <label>Number of Players</label>
+    <div class="num-btn-row">
+      <button class="num-btn selected" data-num="2" onclick="selectNumPlayers(2)">2</button>
+      <button class="num-btn" data-num="3" onclick="selectNumPlayers(3)">3</button>
+      <button class="num-btn" data-num="4" onclick="selectNumPlayers(4)">4</button>
+    </div>
+  </div>
+
+  <div id="player-name-fields"></div>
+
+  <div class="setup-section">
+    <label>Number of Rounds</label>
+    <div class="num-btn-row">
+      <button class="num-btn" data-round="1" onclick="selectRounds(1)">1</button>
+      <button class="num-btn" data-round="2" onclick="selectRounds(2)">2</button>
+      <button class="num-btn selected" data-round="3" onclick="selectRounds(3)">3</button>
+      <button class="num-btn" data-round="4" onclick="selectRounds(4)">4</button>
+      <button class="num-btn" data-round="5" onclick="selectRounds(5)">5</button>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <label>Timer per Round</label>
+    <div class="num-btn-row">
+      <button class="num-btn" data-time="60" onclick="selectTimer(60)">1 min</button>
+      <button class="num-btn" data-time="120" onclick="selectTimer(120)">2 min</button>
+      <button class="num-btn selected" data-time="180" onclick="selectTimer(180)">3 min</button>
+      <button class="num-btn" data-time="240" onclick="selectTimer(240)">4 min</button>
+      <button class="num-btn" data-time="300" onclick="selectTimer(300)">5 min</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary" onclick="startGame()">Start Game!</button>
+  <div style="height:10px"></div>
+  <button class="btn btn-ghost btn-sm" onclick="showScreen('screen-welcome')">← Back</button>
+</div>
+
+<!-- ROUND START -->
+<div id="screen-round-start" class="screen">
+  <div class="round-label" id="round-start-label">Round 1 of 3</div>
+  <h2>The letter is…</h2>
+  <div class="letter-die" id="round-letter">A</div>
+  <p style="color:var(--text-dim);font-size:0.84rem;max-width:300px;text-align:center">Each player will see the 10 categories on their own turn. Name something in each that starts with this letter!</p>
+  <button class="btn btn-primary" onclick="beginPlayerTurns()">Let's Go! →</button>
+</div>
+
+<!-- PASS TO PLAYER -->
+<div id="screen-pass" class="screen">
+  <div class="pass-icon">📱</div>
+  <div>
+    <div style="color:var(--text-dim);font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Pass the phone to</div>
+    <div class="pass-player-name" id="pass-name">Alex</div>
+  </div>
+  <p>Cover the screen and hand the device over. Only <strong id="pass-name2">Alex</strong> should look now!</p>
+  <button class="btn btn-primary" onclick="startPlayerTurn()">I'm <span id="pass-name3">Alex</span>, Ready! →</button>
+</div>
+
+<!-- PLAY -->
+<div id="screen-play" class="screen">
+  <div class="play-header">
+    <div class="play-letter-badge" id="play-letter">A</div>
+    <div class="play-info">
+      <div class="play-player-name" id="play-pname">Alex's Turn</div>
+      <div class="play-round-info" id="play-rinfo">Round 1 • Player 1 of 2</div>
+    </div>
+    <div class="timer-display" id="timer-disp">3:00</div>
+    <button class="play-icon-btn pause-btn" onclick="pauseGame()" title="Pause">⏸</button>
+    <button class="play-icon-btn stop-btn"  onclick="openStop()"  title="Stop">■</button>
+  </div>
+  <div class="play-body" id="play-body"></div>
+  <div class="play-footer">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+    <button class="btn btn-primary btn-sm" onclick="submitAnswers()">Submit My Answers →</button>
+  </div>
+</div>
+
+<!-- SCORING -->
+<div id="screen-scoring" class="screen">
+  <div class="scoring-header">
+    <h2>Score the Answers</h2>
+    <p>Tap valid answers to give points. Duplicates score zero for both players.</p>
+  </div>
+  <div class="scoring-body" id="scoring-body"></div>
+  <div class="scoring-footer">
+    <button class="btn btn-success" onclick="finalizeScoringAndContinue()">Confirm Scores →</button>
+  </div>
+</div>
+
+<!-- SCOREBOARD -->
+<div id="screen-scoreboard" class="screen">
+  <h2 id="sb-title">After Round 1</h2>
+  <div class="sb-subtitle" id="sb-sub">Scores so far</div>
+  <div class="scoreboard-list" id="sb-list"></div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="sb-next-btn" onclick="nextRoundOrEnd()">Next Round →</button>
+</div>
+
+<!-- FINAL -->
+<div id="screen-final" class="screen">
+  <div class="confetti-row">🎉🏆🎉</div>
+  <div class="winner-label">Winner!</div>
+  <div class="winner-name" id="final-winner">Alex</div>
+  <div class="winner-score" id="final-wscore">12 points</div>
+  <div class="final-scores" id="final-list"></div>
+  <button class="btn btn-primary mt-20" onclick="showScreen('screen-welcome')">Main Menu</button>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────
+//  DATA
+// ────────────────────────────────────────────────────
+
+const LETTERS = 'ABCDEFGHIJKLMNOPRSTW'.split('');
+
+const CATS_STANDARD = [
+  // People & Names
+  "Boys' Names","Girls' Names","Celebrities","Famous Artists","Famous Scientists",
+  "Famous Duos","Historical Figures","Famous Leaders","Famous Athletes","Fictional Characters",
+  "Famous Authors","Famous Composers","Famous Explorers","Famous Inventors","Philosophers",
+  // Places
+  "Countries","Cities","Capital Cities","Islands","Mountains","Rivers","Deserts",
+  "Famous Landmarks","National Parks","Beaches","Neighborhoods","States or Provinces",
+  "European Countries","Asian Countries","African Countries","Things Found in a Forest",
+  "Things at a Beach","Things in a City",
+  // Food & Drink
+  "Foods & Drinks","Fruits","Vegetables","Desserts","Pizza Toppings","Types of Pasta",
+  "Types of Cheese","Cocktails","Types of Tea","Coffee Drinks","Snack Foods","Condiments",
+  "Breakfast Foods","Street Foods","Types of Bread","Soups","Sandwiches","Spices & Herbs",
+  "Fast Food Items","Sushi Types","Ice Cream Flavors","Types of Candy","Cooking Methods",
+  // Entertainment
+  "Movies","TV Shows","Books","Songs","Video Games","Board Games","Card Games",
+  "Types of Music","Musical Instruments","Musical Genres","Musicals","Podcast Topics",
+  "Streaming Shows","Animated Films","90s TV Shows","Comic Book Characters","Superheroes",
+  "Villains","Fairy Tale Characters","Fantasy Creatures","Mythological Creatures",
+  // Sports & Activities
+  "Sports","Olympic Sports","Hobbies","Dances","Yoga Poses","Things in a Gym",
+  "Extreme Sports","Water Sports","Winter Sports","Ball Sports","Martial Arts","Card Games",
+  "Board Game Pieces","Things You Do at a Party","Party Games",
+  // Nature & Science
+  "Animals","Insects","Dog Breeds","Cat Breeds","Birds","Sea Creatures","Flowers",
+  "Types of Weather","Things in Space","Science Terms","Elements on the Periodic Table",
+  "Types of Rocks","Dinosaurs","Plants","Trees","Things Found Outside",
+  // Objects & Things
+  "Clothing Items","Things in a Kitchen","Things in a Bedroom","Things in a Bathroom",
+  "Things in an Office","Things in a Bag","Things in a Wallet","Things at a Grocery Store",
+  "Things in a Hospital","Things at School","Things in a Car","Things at a Party",
+  "Things That Are Round","Things That Make Noise","Things That Fly","Things You Can Recycle",
+  "Things on a Desk","Things in a Toolbox","Things in a Backpack","Things in a Hotel Room",
+  "Things in a Museum","Things at an Airport","Things at a Campsite","Things in a Garage",
+  // Brands & Pop Culture
+  "Brands & Companies","Car Brands","Social Media Apps","Restaurants","Fast Food Chains",
+  "Clothing Brands","Tech Companies","Sports Teams",
+  // Language & Words
+  "Colors","Languages","Words That Mean Big","Words That Mean Fast","Words That Mean Happy",
+  "Words That Mean Sad","Slang Words","Words with Double Letters","Compound Words",
+  "Words That Are Also Names","Adjectives","Things You'd Say at a Restaurant",
+  // Jobs & Society
+  "Jobs & Careers","School Subjects","Types of Hats","Parts of a Building",
+  "Things in a Hospital","Holiday Traditions","Things at a Wedding","Types of Music Festivals",
+  "Things in a Library","Historical Events","Religions of the World","Political Terms",
+  // Misc
+  "Things That Are Red","Things That Are Blue","Things That Are Yellow",
+  "Things Smaller Than a Coin","Things Bigger Than a Bus","Things You Find Underground",
+  "Things That Come in Pairs","Things With Wheels","Things That Are Sticky",
+  "Things That Are Sharp","Things That Glow","Things Made of Wood","Things Made of Metal",
+  "Things You Do in the Morning","Things You Do at Night","Things in a Fairy Tale",
+  "Things That Are Expensive","Things You'd Find in a Junk Drawer",
+];
+
+const CATS_KIDS = [
+  // Animals
+  "Animals","Farm Animals","Zoo Animals","Sea Creatures","Jungle Animals","Pet Animals",
+  "Animals With Tails","Animals With Wings","Animals That Hop","Baby Animals",
+  "Animals That Are Big","Animals That Are Tiny","Animals With Spots","Nocturnal Animals",
+  "Animals in a Pond","Animals in the Desert","Dinosaurs","Insects","Birds","Reptiles",
+  // Food & Treats
+  "Fruits","Vegetables","Breakfast Foods","Snack Foods","Types of Candy","Ice Cream Flavors",
+  "Things You Eat for Lunch","Things You Eat for Dinner","Foods That Are Sweet",
+  "Foods That Are Crunchy","Foods That Are Soft","Things You Put on a Sandwich",
+  "Pizza Toppings","Types of Pasta","Foods That Are Orange","Foods That Are Round",
+  "Drinks","Things You Find in a Lunchbox","Things at a Picnic","Baked Goods",
+  // Characters & Stories
+  "Cartoon Characters","Superheroes","Disney Characters","Fairy Tale Characters",
+  "Fictional Animals","Storybook Characters","Characters in Space","Video Game Characters",
+  "Fantasy Creatures","Villains","Sidekicks","Magical Objects","Things in a Fairy Tale",
+  "Things a Superhero Needs","Things a Wizard Might Use",
+  // School & Learning
+  "School Subjects","Things in a Classroom","Things in a Backpack","School Supplies",
+  "Things a Teacher Uses","Things in a Library","Types of Books","Things You Learn at School",
+  "Math Words","Science Words","Colors","Shapes",
+  // Play & Games
+  "Toys","Board Games","Playground Equipment","Things You Do at Recess","Card Games",
+  "Video Games","Sports","Things You Do at a Sleepover","Things at a Birthday Party",
+  "Party Games","Things in a Toy Store","Things You Build","Arts & Crafts Supplies",
+  "Things You Can Collect","Musical Instruments","Dances","Things in a Sandbox",
+  // Places & Adventures
+  "Places You Go on Vacation","Things at the Beach","Things at a Zoo","Things at a Fair",
+  "Things at an Amusement Park","Things at a Farm","Things in a Forest","Things in Space",
+  "Magical Places","Things at a Campsite","Things at a Water Park","Things You See on a Road Trip",
+  "Countries","Cities","Things in a Castle","Rooms in a House","Things in a Garden",
+  // Home & Family
+  "Things in a Kitchen","Things in a Bedroom","Things in a Bathroom","Things in a Living Room",
+  "Things in a Garage","Things Outside a House","Things in a Backyard","Family Members",
+  "Things You Do on the Weekend","Chores","Things That Are Cozy","Things in a Toy Chest",
+  "Things on a Bookshelf","Pet Supplies","Things You Need to Camp",
+  // Clothes & Appearance
+  "Clothing Items","Things You Wear in Winter","Things You Wear in Summer","Types of Hats",
+  "Things in a Dress-Up Box","Shoes","Accessories","Things That Are Colorful",
+  // Nature & Weather
+  "Types of Weather","Things You See in the Sky","Things in a Garden","Flowers","Trees",
+  "Things You Find on a Walk","Things That Are Green","Things That Grow","Things in a Pond",
+  "Things You See at Night","Seasons","Things That Are Shiny","Things Found Underground",
+  // Body & Health
+  "Body Parts","Things at a Doctor's Office","Things You Do to Stay Healthy",
+  "Things That Make You Happy","Things That Are Funny","Feelings & Emotions",
+  // Misc Fun
+  "Things That Are Loud","Things That Are Soft","Things That Are Fluffy",
+  "Things That Can Fly","Things That Are Round","Things That Are Tiny",
+  "Things That Come in Pairs","Things That Are Smelly (in a good way)","Things That Are Cold",
+  "Things That Are Hot","Things That Are Fast","Things That Bounce","Things That Are Sticky",
+  "Things in a Magic Trick","Things You'd Wish For","Things a Giant Might Have",
+  "Things You'd Find in a Treehouse","Things That Make You Smile","Things That Sparkle",
+  "Things in a Pirate's Treasure Chest","Things on a Farm","Holiday Traditions",
+  "Birthday Party Supplies","Things You See at Christmas","Things at Halloween",
+];
+
+const COLORS = ['#ff6b6b','#4d96ff','#6bcb77','#c77dff'];
+
+// ────────────────────────────────────────────────────
+//  STATE
+// ────────────────────────────────────────────────────
+
+let G = {
+  numPlayers: 2,
+  names: ['Player 1','Player 2'],
+  totalRounds: 3,
+  timerSecs: 180,
+  categoryMode: 'standard',
+  round: 0,
+  scores: [],       // total per player
+  roundScores: [],  // per round per player
+  letter: '',
+  cats: [],
+  playerIdx: 0,
+  answers: [],      // [playerIdx][catIdx]
+  timerInterval: null,
+  timeLeft: 0,
+};
+
+// ────────────────────────────────────────────────────
+//  SCREENS
+// ────────────────────────────────────────────────────
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ────────────────────────────────────────────────────
+//  SETUP CONTROLS
+// ────────────────────────────────────────────────────
+
+function selectMode(m) {
+  G.categoryMode = m;
+  document.querySelectorAll('.num-btn[data-mode]').forEach(b =>
+    b.classList.toggle('selected', b.dataset.mode === m));
+}
+
+function selectNumPlayers(n) {
+  G.numPlayers = n;
+  document.querySelectorAll('.num-btn[data-num]').forEach(b =>
+    b.classList.toggle('selected', +b.dataset.num === n));
+  renderNameFields();
+}
+
+function selectRounds(n) {
+  G.totalRounds = n;
+  document.querySelectorAll('.num-btn[data-round]').forEach(b =>
+    b.classList.toggle('selected', +b.dataset.round === n));
+}
+
+function selectTimer(s) {
+  G.timerSecs = s;
+  document.querySelectorAll('.num-btn[data-time]').forEach(b =>
+    b.classList.toggle('selected', +b.dataset.time === s));
+}
+
+function renderNameFields() {
+  const el = document.getElementById('player-name-fields');
+  let html = '';
+  for (let i = 0; i < G.numPlayers; i++) {
+    const clr = COLORS[i];
+    const val = (G.names[i] || `Player ${i+1}`);
+    html += `<div class="field">
+      <label style="color:${clr}">● Player ${i+1} Name</label>
+      <input type="text" id="pn-${i}" value="${esc(val)}" placeholder="Player ${i+1}" maxlength="18">
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function startGame() {
+  G.names = [];
+  for (let i = 0; i < G.numPlayers; i++) {
+    const el = document.getElementById(`pn-${i}`);
+    G.names.push((el ? el.value.trim() : '') || `Player ${i+1}`);
+  }
+  G.scores = new Array(G.numPlayers).fill(0);
+  G.roundScores = [];
+  G.round = 0;
+  beginRound();
+}
+
+function resetToSetup() {
+  showScreen('screen-setup');
+  renderNameFields();
+}
+
+// ────────────────────────────────────────────────────
+//  ROUND FLOW
+// ────────────────────────────────────────────────────
+
+function beginRound() {
+  G.round++;
+  G.letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+  const pool = G.categoryMode === 'kids' ? CATS_KIDS : CATS_STANDARD;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  G.cats = shuffled.slice(0, 10);
+  G.answers = Array.from({length: G.numPlayers}, () => new Array(10).fill(''));
+  G.playerIdx = 0;
+
+  document.getElementById('round-start-label').textContent = `Round ${G.round} of ${G.totalRounds}`;
+  document.getElementById('round-letter').textContent = G.letter;
+
+  showScreen('screen-round-start');
+}
+
+function beginPlayerTurns() {
+  showPassScreen(0);
+}
+
+function showPassScreen(pi) {
+  G.playerIdx = pi;
+  const n = G.names[pi];
+  document.getElementById('pass-name').textContent = n;
+  document.getElementById('pass-name').className = `pass-player-name color-${pi}`;
+  document.getElementById('pass-name2').textContent = n;
+  document.getElementById('pass-name3').textContent = n;
+  showScreen('screen-pass');
+}
+
+function startPlayerTurn() {
+  G.submitted = false;  // reset guard for this turn
+  G.paused = false;
+  const pi = G.playerIdx;
+  const n = G.names[pi];
+
+  document.getElementById('play-letter').textContent = G.letter;
+  document.getElementById('play-pname').textContent = `${n}'s Turn`;
+  document.getElementById('play-pname').style.color = COLORS[pi];
+  document.getElementById('play-rinfo').textContent =
+    `Round ${G.round} of ${G.totalRounds} · Player ${pi+1} of ${G.numPlayers}`;
+
+  const body = document.getElementById('play-body');
+  // Use turn-scoped IDs (p{pi}r{round}c{i}) so the browser has no cached
+  // values to restore, and set .value via JS after insertion (beats autofill).
+  body.innerHTML = G.cats.map((cat, i) => `
+    <div class="category-row">
+      <div class="category-label">
+        <span class="cat-num">${i+1}.</span>
+        <span class="cat-name">${esc(cat)}</span>
+      </div>
+      <input type="text" id="a-p${pi}r${G.round}c${i}"
+        placeholder="${G.letter}…"
+        autocomplete="off" autocorrect="off" autocapitalize="words"
+        spellcheck="false">
+    </div>`).join('');
+  // Set values via JS property — this wins over any browser autofill/cache.
+  for (let i = 0; i < 10; i++) {
+    const el = document.getElementById(`a-p${pi}r${G.round}c${i}`);
+    if (el) el.value = G.answers[pi][i] || '';
+  }
+
+  startTimer();
+  showScreen('screen-play');
+}
+
+// ────────────────────────────────────────────────────
+//  TIMER
+// ────────────────────────────────────────────────────
+
+function startTimer() {
+  clearInterval(G.timerInterval);
+  G.timeLeft = G.timerSecs;
+  renderTimer();
+  G.timerInterval = setInterval(() => {
+    G.timeLeft--;
+    renderTimer();
+    if (G.timeLeft <= 0) { clearInterval(G.timerInterval); submitAnswers(true); }
+  }, 1000);
+}
+
+function renderTimer() {
+  const t = G.timeLeft;
+  const s = `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
+  const td = document.getElementById('timer-disp');
+  const pb = document.getElementById('prog-bar');
+  if (td) { td.textContent = s; td.classList.toggle('urgent', t <= 30); }
+  if (pb) { pb.style.width = (t/G.timerSecs*100)+'%'; pb.classList.toggle('urgent', t <= 30); }
+}
+
+// ────────────────────────────────────────────────────
+//  SUBMIT
+// ────────────────────────────────────────────────────
+
+function submitAnswers() {
+  if (G.submitted) return;
+  G.submitted = true;
+  clearInterval(G.timerInterval);
+  const pi = G.playerIdx;
+  for (let i = 0; i < 10; i++) {
+    const el = document.getElementById(`a-p${pi}r${G.round}c${i}`);
+    G.answers[pi][i] = el ? el.value.trim() : '';
+  }
+  const next = pi + 1;
+  if (next < G.numPlayers) { showPassScreen(next); }
+  else { showScoringScreen(); }
+}
+
+// ────────────────────────────────────────────────────
+//  SCORING
+// ────────────────────────────────────────────────────
+
+function showScoringScreen() {
+  const body = document.getElementById('scoring-body');
+  let html = '';
+  const roundLetter = G.letter.toLowerCase();
+
+  G.cats.forEach((cat, ci) => {
+    const rows = G.names.map((name, pi) => ({
+      text: G.answers[pi][ci], pi, name
+    }));
+
+    // Count duplicates (case-insensitive, non-empty)
+    const counts = {};
+    rows.forEach(r => {
+      if (r.text) counts[r.text.toLowerCase()] = (counts[r.text.toLowerCase()]||0)+1;
+    });
+
+    html += `<div class="scoring-category">
+      <div class="scoring-cat-title"><span>${ci+1}.</span> ${esc(cat)}</div>
+      <div class="scoring-answers">`;
+
+    rows.forEach(r => {
+      const empty = !r.text;
+      const dup   = !empty && counts[r.text.toLowerCase()] > 1;
+      const wrong = !empty && !dup && !r.text.toLowerCase().startsWith(roundLetter);
+      // Auto-valid: non-empty, not a duplicate, starts with correct letter
+      const autoValid = !empty && !dup && !wrong;
+
+      const cls = empty ? 'empty' : dup ? 'duplicate' : (autoValid ? 'valid' : '');
+
+      html += `<div class="scoring-answer-row ${cls}"
+          id="sr-${ci}-${r.pi}"
+          data-dup="${dup}" data-empty="${empty}" data-wrong="${wrong}"
+          onclick="toggleAnswer(${ci},${r.pi})">
+        <div class="answer-check" id="chk-${ci}-${r.pi}">${autoValid ? '✓' : ''}</div>
+        <div style="flex:1;min-width:0">
+          <div class="answer-player-name" style="color:${COLORS[r.pi]}">${esc(r.name)}</div>
+          <div class="answer-text">${empty
+            ? '<em style="color:var(--text-dim);font-size:0.88rem">No answer</em>'
+            : esc(r.text)}</div>
+        </div>
+        ${dup   ? '<span class="dup-badge">Duplicate</span>' : ''}
+        ${wrong ? `<span class="wrong-badge">Wrong letter</span>` : ''}
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  body.innerHTML = html;
+  showScreen('screen-scoring');
+}
+
+function toggleAnswer(ci, pi) {
+  const row = document.getElementById(`sr-${ci}-${pi}`);
+  // Empty and duplicate are never togglable; wrong-letter IS togglable as override
+  if (!row || row.dataset.empty==='true' || row.dataset.dup==='true') return;
+  const valid = row.classList.toggle('valid');
+  const chk = document.getElementById(`chk-${ci}-${pi}`);
+  if (chk) chk.textContent = valid ? '✓' : '';
+}
+
+function finalizeScoringAndContinue() {
+  const rp = new Array(G.numPlayers).fill(0);
+  G.cats.forEach((_, ci) => {
+    G.names.forEach((_, pi) => {
+      if (document.getElementById(`sr-${ci}-${pi}`)?.classList.contains('valid')) rp[pi]++;
+    });
+  });
+  G.roundScores.push(rp);
+  rp.forEach((p,i) => G.scores[i] += p);
+  showScoreboard();
+}
+
+// ────────────────────────────────────────────────────
+//  SCOREBOARD
+// ────────────────────────────────────────────────────
+
+function showScoreboard() {
+  const last = G.round >= G.totalRounds;
+  document.getElementById('sb-title').textContent = last ? 'Final Scores' : `After Round ${G.round}`;
+  document.getElementById('sb-sub').textContent = last ? 'Game over!' : `${G.totalRounds - G.round} round(s) remaining`;
+  document.getElementById('sb-next-btn').textContent = last ? '🏆 See Winner!' : `Start Round ${G.round+1} →`;
+
+  const sorted = G.names.map((n,i) => ({
+    n, i, total: G.scores[i],
+    rr: G.roundScores.map(r => r[i])
+  })).sort((a,b) => b.total - a.total);
+
+  const top = sorted[0].total;
+  let html = '';
+  sorted.forEach((p, rank) => {
+    const lead = p.total===top && p.total>0;
+    const rsStr = p.rr.map((v,ri) => `R${ri+1}: ${v}`).join(' · ');
+    html += `<div class="scoreboard-row ${lead?'leader':''}">
+      <div class="rank">${rank===0&&lead?'🏆':rank+1}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sb-name" style="color:${COLORS[p.i]}">${esc(p.n)}</div>
+        <div class="sb-round-scores">${rsStr}</div>
+      </div>
+      <div class="sb-score">${p.total}</div>
+    </div>`;
+  });
+
+  document.getElementById('sb-list').innerHTML = html;
+  showScreen('screen-scoreboard');
+}
+
+function nextRoundOrEnd() {
+  if (G.round >= G.totalRounds) showFinal();
+  else beginRound();
+}
+
+// ────────────────────────────────────────────────────
+//  FINAL
+// ────────────────────────────────────────────────────
+
+function showFinal() {
+  const sorted = G.names.map((n,i)=>({n,i,total:G.scores[i]})).sort((a,b)=>b.total-a.total);
+  const w = sorted[0];
+  const tie = sorted.length>1 && sorted[1].total===w.total;
+
+  const wEl = document.getElementById('final-winner');
+  wEl.textContent = tie ? `${w.n} & ${sorted[1].n}` : w.n;
+  wEl.style.color = tie ? 'var(--accent2)' : COLORS[w.i];
+  document.getElementById('final-wscore').textContent = tie
+    ? `Tied at ${w.total} points each!`
+    : `${w.total} point${w.total!==1?'s':''} total`;
+
+  const medals = ['🥇','🥈','🥉','🏅'];
+  let html = '';
+  sorted.forEach((p,r) => {
+    html += `<div class="scoreboard-row ${r===0?'leader':''}">
+      <div class="rank">${medals[r]||r+1}</div>
+      <div class="sb-name" style="color:${COLORS[p.i]}">${esc(p.n)}</div>
+      <div class="sb-score">${p.total}</div>
+    </div>`;
+  });
+  document.getElementById('final-list').innerHTML = html;
+  showScreen('screen-final');
+}
+
+// ────────────────────────────────────────────────────
+//  UTIL
+// ────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ────────────────────────────────────────────────────
+//  HOW TO PLAY MODAL
+// ────────────────────────────────────────────────────
+
+function openHtp() {
+  document.getElementById('modal-htp').classList.add('active');
+}
+function closeHtpBtn() {
+  document.getElementById('modal-htp').classList.remove('active');
+}
+function closeHtp(e) {
+  if (e.target === document.getElementById('modal-htp')) closeHtpBtn();
+}
+
+// ────────────────────────────────────────────────────
+//  PAUSE / RESUME
+// ────────────────────────────────────────────────────
+
+function pauseGame() {
+  if (G.paused) return;
+  G.paused = true;
+  clearInterval(G.timerInterval);
+  // Blur all inputs so content isn't visible via keyboard
+  document.querySelectorAll('#play-body input').forEach(el => el.blur());
+  document.getElementById('pause-overlay').classList.add('active');
+}
+
+function resumeGame() {
+  G.paused = false;
+  document.getElementById('pause-overlay').classList.remove('active');
+  // Restart the countdown from where it left off
+  G.timerInterval = setInterval(() => {
+    G.timeLeft--;
+    renderTimer();
+    if (G.timeLeft <= 0) { clearInterval(G.timerInterval); submitAnswers(); }
+  }, 1000);
+}
+
+// ────────────────────────────────────────────────────
+//  STOP GAME
+// ────────────────────────────────────────────────────
+
+function openStop() {
+  if (!G.paused) pauseGame();
+  document.getElementById('modal-stop').classList.add('active');
+}
+function closeStopBtn() {
+  document.getElementById('modal-stop').classList.remove('active');
+  if (G.paused) resumeGame();
+}
+function closeStop(e) {
+  if (e.target === document.getElementById('modal-stop')) closeStopBtn();
+}
+function confirmStop() {
+  clearInterval(G.timerInterval);
+  G.paused = false;
+  document.getElementById('modal-stop').classList.remove('active');
+  document.getElementById('pause-overlay').classList.remove('active');
+  showScreen('screen-welcome');
+}
+
+// ────────────────────────────────────────────────────
+//  INIT
+// ────────────────────────────────────────────────────
+
+selectMode('standard');
+selectNumPlayers(2);
+selectRounds(3);
+selectTimer(180);
+</script>
+</body>
+</html>
