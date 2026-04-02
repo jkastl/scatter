@@ -173,7 +173,7 @@
     padding: 11px 13px; border: 2px solid transparent;
     cursor: pointer; transition: all 0.12s; user-select: none;
   }
-  .scoring-answer-row.valid { border-color: var(--accent3); background: rgba(107,203,119,0.08); }
+  .scoring-answer-row.valid { border-color: var(--player-color, var(--accent3)); background: rgba(107,203,119,0.06); }
   .scoring-answer-row.duplicate { opacity: 0.45; cursor: default; }
   .scoring-answer-row.empty { opacity: 0.28; cursor: default; }
   .answer-check {
@@ -181,7 +181,7 @@
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     font-size: 0.88rem; transition: all 0.12s;
   }
-  .scoring-answer-row.valid .answer-check { background: var(--accent3); border-color: var(--accent3); color: #0f0e17; }
+  .scoring-answer-row.valid .answer-check { background: var(--player-color, var(--accent3)); border-color: var(--player-color, var(--accent3)); color: #0f0e17; }
   .answer-player-name { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 1px; }
   .answer-text { font-size: 1rem; }
   .dup-badge   { font-size: 0.68rem; background: rgba(255,107,107,0.18); color: var(--accent1); border: 1px solid rgba(255,107,107,0.35); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
@@ -805,15 +805,28 @@ function showScoringScreen() {
   let html = '';
   const roundLetter = G.letter.toLowerCase();
 
+  // Build a set of each player's self-duplicated answers (used more than once by that player)
+  // selfDups[pi] = Set of lowercased answers that appear >1 time in that player's answers
+  const selfDups = G.names.map((_, pi) => {
+    const seen = {}, dups = new Set();
+    G.answers[pi].forEach(a => {
+      if (!a) return;
+      const k = a.toLowerCase();
+      if (seen[k]) dups.add(k);
+      else seen[k] = true;
+    });
+    return dups;
+  });
+
   G.cats.forEach((cat, ci) => {
     const rows = G.names.map((name, pi) => ({
       text: G.answers[pi][ci], pi, name
     }));
 
-    // Count duplicates (case-insensitive, non-empty)
-    const counts = {};
+    // Cross-player duplicates (same answer from two+ different players)
+    const crossCounts = {};
     rows.forEach(r => {
-      if (r.text) counts[r.text.toLowerCase()] = (counts[r.text.toLowerCase()]||0)+1;
+      if (r.text) crossCounts[r.text.toLowerCase()] = (crossCounts[r.text.toLowerCase()]||0)+1;
     });
 
     html += `<div class="scoring-category">
@@ -821,27 +834,32 @@ function showScoringScreen() {
       <div class="scoring-answers">`;
 
     rows.forEach(r => {
-      const empty = !r.text;
-      const dup   = !empty && counts[r.text.toLowerCase()] > 1;
-      const wrong = !empty && !dup && !r.text.toLowerCase().startsWith(roundLetter);
-      // Auto-valid: non-empty, not a duplicate, starts with correct letter
+      const empty     = !r.text;
+      const crossDup  = !empty && crossCounts[r.text.toLowerCase()] > 1;
+      const selfDup   = !empty && !crossDup && selfDups[r.pi].has(r.text.toLowerCase());
+      const dup       = crossDup || selfDup;
+      const wrong     = !empty && !dup && !r.text.toLowerCase().startsWith(roundLetter);
       const autoValid = !empty && !dup && !wrong;
+      const playerColor = COLORS[r.pi];
 
       const cls = empty ? 'empty' : dup ? 'duplicate' : (autoValid ? 'valid' : '');
+      const colorStyle = `--player-color:${playerColor}`;
 
       html += `<div class="scoring-answer-row ${cls}"
           id="sr-${ci}-${r.pi}"
+          style="${colorStyle}"
           data-dup="${dup}" data-empty="${empty}" data-wrong="${wrong}"
+          data-color="${playerColor}"
           onclick="toggleAnswer(${ci},${r.pi})">
         <div class="answer-check" id="chk-${ci}-${r.pi}">${autoValid ? '✓' : ''}</div>
         <div style="flex:1;min-width:0">
-          <div class="answer-player-name" style="color:${COLORS[r.pi]}">${esc(r.name)}</div>
+          <div class="answer-player-name" style="color:${playerColor}">${esc(r.name)}</div>
           <div class="answer-text">${empty
             ? '<em style="color:var(--text-dim);font-size:0.88rem">No answer</em>'
             : esc(r.text)}</div>
         </div>
         ${dup   ? '<span class="dup-badge">Duplicate</span>' : ''}
-        ${wrong ? `<span class="wrong-badge">Wrong letter</span>` : ''}
+        ${wrong ? '<span class="wrong-badge">Wrong letter</span>' : ''}
       </div>`;
     });
 
@@ -854,7 +872,6 @@ function showScoringScreen() {
 
 function toggleAnswer(ci, pi) {
   const row = document.getElementById(`sr-${ci}-${pi}`);
-  // Empty and duplicate are never togglable; wrong-letter IS togglable as override
   if (!row || row.dataset.empty==='true' || row.dataset.dup==='true') return;
   const valid = row.classList.toggle('valid');
   const chk = document.getElementById(`chk-${ci}-${pi}`);
