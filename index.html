@@ -181,7 +181,7 @@
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     font-size: 0.88rem; transition: all 0.12s;
   }
-  .scoring-answer-row.valid .answer-check { background: var(--player-color, var(--accent3)); border-color: var(--player-color, var(--accent3)); color: #0f0e17; }
+  .scoring-answer-row.valid .answer-check { background: var(--accent3); border-color: var(--accent3); color: #0f0e17; }
   .answer-player-name { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 1px; }
   .answer-text { font-size: 1rem; }
   .dup-badge   { font-size: 0.68rem; background: rgba(255,107,107,0.18); color: var(--accent1); border: 1px solid rgba(255,107,107,0.35); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
@@ -216,13 +216,13 @@
   .final-scores { width: 100%; max-width: 380px; margin: 8px auto 0; }
   #screen-final .btn { max-width: 300px; width: 100%; }
 
-  .color-0 { color: #ff6b6b; }
+  .color-0 { color: #ff9f43; }
   .color-1 { color: #4d96ff; }
-  .color-2 { color: #6bcb77; }
+  .color-2 { color: #00d2d3; }
   .color-3 { color: #c77dff; }
-  .bg-0 { background: #ff6b6b; }
+  .bg-0 { background: #ff9f43; }
   .bg-1 { background: #4d96ff; }
-  .bg-2 { background: #6bcb77; }
+  .bg-2 { background: #00d2d3; }
   .bg-3 { background: #c77dff; }
   .mt-12 { margin-top: 12px; }
   .mt-16 { margin-top: 16px; }
@@ -290,23 +290,31 @@
     <div class="modal-body">
       <div class="rule-block">
         <h4>Goal</h4>
-        Score points by naming things in 10 categories — every answer must start with that round's letter.
+        Score points by naming something in each of 10 categories. Every answer must start with that round's letter.
       </div>
       <div class="rule-block">
         <h4>Each Round</h4>
-        A letter is rolled. Players take turns <strong>one at a time in secret</strong> — fill in as many categories as you can before time runs out, then pass the phone. No one else sees your answers until everyone is done.
+        A letter is rolled and shown to everyone. Then players take turns <strong>one at a time in secret</strong> — each player fills in answers while the timer runs, then passes the phone. No one sees anyone else's answers until all players have submitted.
       </div>
       <div class="rule-block">
         <h4>Scoring</h4>
-        After all players submit, you score together. <strong>Tap an answer to mark it valid</strong> (1 point). If two players wrote the same answer, <strong>neither</strong> scores — duplicates are flagged automatically.
+        All answers are reviewed together on the scoring screen. Valid answers are <strong>pre-approved automatically</strong> — tap any answer to toggle it on or off. The border color shows which player the answer belongs to.
+      </div>
+      <div class="rule-block">
+        <h4>Duplicates</h4>
+        If two players wrote the <strong>same answer</strong> for the same category, neither scores — both are flagged "Duplicate." If a player accidentally used the same answer for two different categories, only their <strong>first use</strong> scores; the repeat is flagged.
+      </div>
+      <div class="rule-block">
+        <h4>Wrong Letter</h4>
+        Answers that don't start with the round's letter are flagged automatically and default to zero. You can tap them to <strong>override</strong> and award the point anyway — handy for nicknames or edge cases.
+      </div>
+      <div class="rule-block">
+        <h4>During a Turn</h4>
+        Use the <strong>⏸ pause button</strong> to hide answers and stop the clock — useful if you need a break mid-turn. The <strong>■ stop button</strong> ends the game early and returns to the main menu.
       </div>
       <div class="rule-block">
         <h4>Winning</h4>
         Most points after all rounds wins. Ties are celebrated equally! 🎉
-      </div>
-      <div class="rule-block">
-        <h4>Tips</h4>
-        Unusual answers are harder to duplicate. Proper nouns count — cities, names, brands all work!
       </div>
     </div>
     <button class="btn btn-primary modal-close" onclick="closeHtpBtn()">Got it!</button>
@@ -319,7 +327,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title" style="color:var(--accent1)">Stop the game?</div>
     <div class="modal-body">
-      This will end the current game and return to the main menu. All progress will be lost.
+      This will end the current game and go to the final scores. Any round in progress will not be counted.
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
       <button class="btn btn-danger" onclick="confirmStop()">Yes, End Game</button>
@@ -410,6 +418,7 @@
   <div class="letter-die" id="round-letter">A</div>
   <p style="color:var(--text-dim);font-size:0.84rem;max-width:300px;text-align:center">Each player will see the 10 categories on their own turn. Name something in each that starts with this letter!</p>
   <button class="btn btn-primary" onclick="beginPlayerTurns()">Let's Go! →</button>
+  <button class="btn btn-ghost btn-sm" style="max-width:220px;margin:4px auto 0" onclick="openStop()">End Game</button>
 </div>
 
 <!-- PASS TO PLAYER -->
@@ -421,6 +430,7 @@
   </div>
   <p>Cover the screen and hand the device over. Only <strong id="pass-name2">Alex</strong> should look now!</p>
   <button class="btn btn-primary" onclick="startPlayerTurn()">I'm <span id="pass-name3">Alex</span>, Ready! →</button>
+  <button class="btn btn-ghost btn-sm" style="max-width:220px;margin:4px auto 0" onclick="openStop()">End Game</button>
 </div>
 
 <!-- PLAY -->
@@ -446,11 +456,13 @@
 <div id="screen-scoring" class="screen">
   <div class="scoring-header">
     <h2>Score the Answers</h2>
-    <p>Tap valid answers to give points. Duplicates score zero for both players.</p>
+    <p>Answers are <strong style="color:var(--accent3)">pre-approved</strong> if they start with the round letter. Tap to toggle any answer. <strong style="color:var(--accent1)">Duplicate</strong> answers between players score zero for both. <strong style="color:var(--accent1)">Wrong letter</strong> answers are off by default but can be approved as an override.</p>
   </div>
   <div class="scoring-body" id="scoring-body"></div>
   <div class="scoring-footer">
     <button class="btn btn-success" onclick="finalizeScoringAndContinue()">Confirm Scores →</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="openStop()">End Game</button>
   </div>
 </div>
 
@@ -461,6 +473,8 @@
   <div class="scoreboard-list" id="sb-list"></div>
   <div class="spacer"></div>
   <button class="btn btn-primary" id="sb-next-btn" onclick="nextRoundOrEnd()">Next Round →</button>
+  <div style="height:8px"></div>
+  <button class="btn btn-ghost btn-sm" onclick="openStop()">End Game Early</button>
 </div>
 
 <!-- FINAL -->
@@ -592,7 +606,7 @@ const CATS_KIDS = [
   "Birthday Party Supplies","Things You See at Christmas","Things at Halloween",
 ];
 
-const COLORS = ['#ff6b6b','#4d96ff','#6bcb77','#c77dff'];
+const COLORS = ['#ff9f43','#4d96ff','#00d2d3','#c77dff'];
 
 // ────────────────────────────────────────────────────
 //  STATE
@@ -774,8 +788,8 @@ function renderTimer() {
   const s = `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
   const td = document.getElementById('timer-disp');
   const pb = document.getElementById('prog-bar');
-  if (td) { td.textContent = s; td.classList.toggle('urgent', t <= 30); }
-  if (pb) { pb.style.width = (t/G.timerSecs*100)+'%'; pb.classList.toggle('urgent', t <= 30); }
+  if (td) { td.textContent = s; td.classList.toggle('urgent', t <= Math.ceil(G.timerSecs * 0.1)); }
+  if (pb) { pb.style.width = (t/G.timerSecs*100)+'%'; pb.classList.toggle('urgent', t <= Math.ceil(G.timerSecs * 0.1)); }
 }
 
 // ────────────────────────────────────────────────────
@@ -805,17 +819,19 @@ function showScoringScreen() {
   let html = '';
   const roundLetter = G.letter.toLowerCase();
 
-  // Build a set of each player's self-duplicated answers (used more than once by that player)
-  // selfDups[pi] = Set of lowercased answers that appear >1 time in that player's answers
-  const selfDups = G.names.map((_, pi) => {
-    const seen = {}, dups = new Set();
-    G.answers[pi].forEach(a => {
+  // For same-player dupes: track which cat index is the FIRST use of each answer per player.
+  // Only subsequent uses (ci > first seen) are flagged as duplicates.
+  // selfDupCats[pi][ci] = true means this answer is a same-player repeat (not the first use)
+  const selfDupCats = G.names.map((_, pi) => {
+    const firstSeen = {}; // lowercased answer -> first catIdx
+    const flagged = new Set(); // catIdx values that are repeats
+    G.answers[pi].forEach((a, ci) => {
       if (!a) return;
       const k = a.toLowerCase();
-      if (seen[k]) dups.add(k);
-      else seen[k] = true;
+      if (firstSeen[k] !== undefined) flagged.add(ci);
+      else firstSeen[k] = ci;
     });
-    return dups;
+    return flagged;
   });
 
   G.cats.forEach((cat, ci) => {
@@ -823,7 +839,7 @@ function showScoringScreen() {
       text: G.answers[pi][ci], pi, name
     }));
 
-    // Cross-player duplicates (same answer from two+ different players)
+    // Cross-player duplicates (same answer used by 2+ different players)
     const crossCounts = {};
     rows.forEach(r => {
       if (r.text) crossCounts[r.text.toLowerCase()] = (crossCounts[r.text.toLowerCase()]||0)+1;
@@ -836,20 +852,18 @@ function showScoringScreen() {
     rows.forEach(r => {
       const empty     = !r.text;
       const crossDup  = !empty && crossCounts[r.text.toLowerCase()] > 1;
-      const selfDup   = !empty && !crossDup && selfDups[r.pi].has(r.text.toLowerCase());
+      const selfDup   = !empty && !crossDup && selfDupCats[r.pi].has(ci);
       const dup       = crossDup || selfDup;
       const wrong     = !empty && !dup && !r.text.toLowerCase().startsWith(roundLetter);
       const autoValid = !empty && !dup && !wrong;
       const playerColor = COLORS[r.pi];
 
       const cls = empty ? 'empty' : dup ? 'duplicate' : (autoValid ? 'valid' : '');
-      const colorStyle = `--player-color:${playerColor}`;
 
       html += `<div class="scoring-answer-row ${cls}"
           id="sr-${ci}-${r.pi}"
-          style="${colorStyle}"
+          style="--player-color:${playerColor}"
           data-dup="${dup}" data-empty="${empty}" data-wrong="${wrong}"
-          data-color="${playerColor}"
           onclick="toggleAnswer(${ci},${r.pi})">
         <div class="answer-check" id="chk-${ci}-${r.pi}">${autoValid ? '✓' : ''}</div>
         <div style="flex:1;min-width:0">
@@ -1009,12 +1023,15 @@ function resumeGame() {
 // ────────────────────────────────────────────────────
 
 function openStop() {
-  if (!G.paused) pauseGame();
+  // Only pause the timer if we're mid-turn on the play screen
+  const onPlayScreen = document.getElementById('screen-play').classList.contains('active');
+  if (onPlayScreen && !G.paused) pauseGame();
   document.getElementById('modal-stop').classList.add('active');
 }
 function closeStopBtn() {
   document.getElementById('modal-stop').classList.remove('active');
-  if (G.paused) resumeGame();
+  const onPlayScreen = document.getElementById('screen-play').classList.contains('active');
+  if (onPlayScreen && G.paused) resumeGame();
 }
 function closeStop(e) {
   if (e.target === document.getElementById('modal-stop')) closeStopBtn();
@@ -1024,7 +1041,12 @@ function confirmStop() {
   G.paused = false;
   document.getElementById('modal-stop').classList.remove('active');
   document.getElementById('pause-overlay').classList.remove('active');
-  showScreen('screen-welcome');
+  // If scores exist, show final results; otherwise bail to welcome
+  if (G.scores && G.scores.some(s => s > 0) || G.round > 0) {
+    showFinal();
+  } else {
+    showScreen('screen-welcome');
+  }
 }
 
 // ────────────────────────────────────────────────────
