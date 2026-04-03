@@ -12,7 +12,7 @@ Public GitHub repo: https://github.com/jkastl/scatter
 Do not add tests, linters, CI configuration, or any code analysis tooling unless explicitly instructed. This project intentionally has no build or test infrastructure.
 
 ### Version bumping
-Before pushing to the remote repo, increment the minor version number by 1. The version is displayed as a string (e.g. `v1.5`) inside the `.version-label` div in `index.html`. Update that string in place.
+Before pushing to the remote repo, increment the minor version number by 1 and update the date to today's date. The version is displayed as a string (e.g. `v1.5 · 2026-04-03`) inside the `.version-label` div in `index.html`. Update that string in place.
 
 ### No private information
 This is a public repository. Do not include API keys, credentials, personal data, internal URLs, or any other private information in any commit or file.
