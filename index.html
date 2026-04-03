@@ -367,7 +367,7 @@
   <p class="tagline">Think fast. Name everything.</p>
   <button class="btn btn-primary" onclick="showScreen('screen-setup')">New Game</button>
   <button class="btn btn-ghost" onclick="openHtp()">How to Play</button>
-  <div class="version-label">v1.6</div>
+  <div class="version-label">v1.7</div>
 </div>
 
 <!-- SETUP -->
@@ -485,7 +485,7 @@
   <div class="spacer"></div>
   <button class="btn btn-primary" id="sb-next-btn" onclick="nextRoundOrEnd()">Next Round →</button>
   <div style="height:8px"></div>
-  <button class="btn btn-ghost btn-sm" onclick="openStop()">End Game Early</button>
+  <button class="btn btn-ghost btn-sm" id="sb-end-early-btn" onclick="openStop()">End Game Early</button>
 </div>
 
 <!-- FINAL -->
@@ -941,6 +941,7 @@ function showScoreboard() {
   document.getElementById('sb-title').textContent = last ? 'Final Scores' : `After Round ${G.round}`;
   document.getElementById('sb-sub').textContent = last ? 'Game over!' : `${G.totalRounds - G.round} round(s) remaining`;
   document.getElementById('sb-next-btn').textContent = last ? '🏆 See Winner!' : `Start Round ${G.round+1} →`;
+  document.getElementById('sb-end-early-btn').style.display = last ? 'none' : '';
 
   const sorted = G.names.map((n,i) => ({
     n, i, total: G.scores[i],
