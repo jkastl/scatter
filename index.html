@@ -315,7 +315,7 @@
       </div>
       <div class="rule-block">
         <h4>During a Turn</h4>
-        Use the <strong>⏸ pause button</strong> to hide answers and stop the clock — useful if you need a break mid-turn. The <strong>■ stop button</strong> ends the game early and shows the final scores.
+        Press <strong>Enter</strong> to jump to the next category. Use the <strong>⏸ pause button</strong> to hide answers and stop the clock — useful if you need a break mid-turn. The <strong>■ stop button</strong> ends the game early and shows the final scores.
       </div>
       <div class="rule-block">
         <h4>Winning</h4>
@@ -362,7 +362,7 @@
   <button class="btn btn-primary" onclick="showScreen('screen-setup')">New Game</button>
   <button class="btn btn-ghost" onclick="openHtp()">How to Play</button>
   <!-- Version and date are bumped by hand; see README.md. -->
-  <div class="version-label">v1.8.0 · 2026-09-26</div>
+  <div class="version-label">v1.9.0 · 2026-09-26</div>
 </div>
 
 <!-- SETUP -->
@@ -775,6 +775,7 @@ function startPlayerTurn() {
       <input type="text" id="a-p${pi}r${G.round}c${i}"
         placeholder="${G.letter}…"
         autocomplete="off" autocorrect="off" autocapitalize="words"
+        enterkeyhint="${i < G.cats.length - 1 ? 'next' : 'done'}"
         spellcheck="false">
     </div>`).join('');
   // Set values via JS property — this wins over any browser autofill/cache.
@@ -1047,6 +1048,25 @@ function closeHtpBtn() {
 function closeHtp(e) {
   if (e.target === document.getElementById('modal-htp')) closeHtpBtn();
 }
+
+// ────────────────────────────────────────────────────
+//  ENTER → NEXT CATEGORY
+// ────────────────────────────────────────────────────
+
+// Enter moves to the next answer; on the last one it just closes the keyboard,
+// so a stray Enter can never submit a turn.
+document.getElementById('play-body').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.target.tagName !== 'INPUT') return;
+  e.preventDefault();
+  const inputs = [...document.querySelectorAll('#play-body input')];
+  const next = inputs[inputs.indexOf(e.target) + 1];
+  if (next) {
+    next.focus();
+    next.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  } else {
+    e.target.blur();
+  }
+});
 
 // ────────────────────────────────────────────────────
 //  PAUSE / RESUME

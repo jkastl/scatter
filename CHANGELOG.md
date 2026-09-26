@@ -3,6 +3,13 @@
 Versions follow [semver](https://semver.org/). See [README.md](README.md#versioning).
 Releases before 1.8.0 used two-part versions and are listed as they were shown.
 
+## 1.9.0 · 2026-09-26
+
+### Added
+- Pressing **Enter** (or **Next** on a phone keyboard) in an answer jumps to the next
+  category. On the last category it closes the keyboard rather than submitting the
+  turn.
+
 ## 1.8.0 · 2026-09-26
 
 ### Fixed

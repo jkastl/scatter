@@ -15,7 +15,8 @@ One file, no build step, no dependencies, no network calls. The whole game is
 2. **Roll:** each round shows a letter and deals 10 random categories. Letters don't
    repeat within a game.
 3. **Turns:** players take turns one at a time in secret, then pass the phone. **⏸**
-   hides the answers and stops the clock. **■** ends the game.
+   hides the answers and stops the clock. **■** ends the game. **Enter** (or **Next**
+   on a phone keyboard) jumps to the next category.
 4. **Scoring:** everyone reviews all the answers together. Answers are pre-approved
    automatically, and tapping one toggles it.
    - **Duplicate:** two players gave the same answer in a category. Neither scores.
