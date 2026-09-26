@@ -38,11 +38,21 @@ The two lists, `CATS_STANDARD` and `CATS_KIDS`, are near the top of the `<script
 Each round draws 10 different categories at random from the active list. To add a
 category, put it in the fitting group. Duplicates are ignored, but keep the list clean.
 
+## Working on it
+
+- **Keep it simple.** The game is deliberately one file, with no package manager, build
+  step, tests, linters or CI. Don't add any of that without a good reason.
+- **Keep it public-safe.** This is a public repo, so no API keys, credentials, personal
+  data or internal URLs in any file or commit.
+- **Commit straight to `main`.** No feature branches or pull requests unless there's a
+  reason for one. Pages deploys from `main`.
+
 ## Versioning
 
-The version and date on the home screen are **updated by hand**. Nothing bumps them
-automatically. Change both in the same commit as the change they describe, add an entry
-to [`CHANGELOG.md`](CHANGELOG.md), and follow [semver](https://semver.org/):
+The version and date on the home screen (the `.version-label` div in `index.html`) are
+**updated by hand**. Nothing bumps them automatically. Change both in the same commit
+as the change they describe, add an entry to [`CHANGELOG.md`](CHANGELOG.md), and follow
+[semver](https://semver.org/):
 
 - **Patch** (`1.8.0` → `1.8.1`): bug fixes and wording tweaks.
 - **Minor** (`1.8.0` → `1.9.0`): new features, categories or rule changes.
