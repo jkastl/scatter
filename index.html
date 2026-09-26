@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Scatter! A pass-the-phone category game: roll a letter and name something in each of 10 categories.">
 <title>Scatter! – The Category Game</title>
 <style>
   :root {
@@ -49,7 +50,6 @@
   .btn-primary { background: var(--accent2); color: #0f0e17; }
   .btn-danger  { background: var(--accent1); color: #fff; }
   .btn-success { background: var(--accent3); color: #0f0e17; }
-  .btn-blue    { background: var(--accent4); color: #fff; }
   .btn-ghost   { background: transparent; color: var(--text-dim); border: 2px solid var(--border); }
   .btn-sm      { padding: 12px 16px; font-size: 0.95rem; min-height: 46px; }
 
@@ -217,16 +217,10 @@
   .final-scores { width: 100%; max-width: 380px; margin: 8px auto 0; }
   #screen-final .btn { max-width: 300px; width: 100%; }
 
-  .color-0 { color: #ff9f43; }
-  .color-1 { color: #4d96ff; }
-  .color-2 { color: #00d2d3; }
-  .color-3 { color: #c77dff; }
   .bg-0 { background: #ff9f43; }
   .bg-1 { background: #4d96ff; }
   .bg-2 { background: #00d2d3; }
   .bg-3 { background: #c77dff; }
-  .mt-12 { margin-top: 12px; }
-  .mt-16 { margin-top: 16px; }
   .mt-20 { margin-top: 20px; }
 
   /* PAUSE OVERLAY */
@@ -321,7 +315,7 @@
       </div>
       <div class="rule-block">
         <h4>During a Turn</h4>
-        Use the <strong>⏸ pause button</strong> to hide answers and stop the clock — useful if you need a break mid-turn. The <strong>■ stop button</strong> ends the game early and returns to the main menu.
+        Use the <strong>⏸ pause button</strong> to hide answers and stop the clock — useful if you need a break mid-turn. The <strong>■ stop button</strong> ends the game early and shows the final scores.
       </div>
       <div class="rule-block">
         <h4>Winning</h4>
@@ -338,7 +332,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title" style="color:var(--accent1)">Stop the game?</div>
     <div class="modal-body">
-      This will end the current game and go to the final scores. Any round in progress will not be counted.
+      This will end the current game and show the final scores. Any round in progress will not be counted.
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
       <button class="btn btn-danger" onclick="confirmStop()">Yes, End Game</button>
@@ -367,7 +361,8 @@
   <p class="tagline">Think fast. Name everything.</p>
   <button class="btn btn-primary" onclick="showScreen('screen-setup')">New Game</button>
   <button class="btn btn-ghost" onclick="openHtp()">How to Play</button>
-  <div class="version-label">v1.7 · 2026-04-03</div>
+  <!-- Version and date are bumped by hand; see README.md. -->
+  <div class="version-label">v1.8.0 · 2026-09-26</div>
 </div>
 
 <!-- SETUP -->
@@ -428,7 +423,7 @@
   <h2>The letter is…</h2>
   <div class="letter-die" id="round-letter">A</div>
   <p style="color:var(--text-dim);font-size:0.84rem;max-width:300px;text-align:center">Each player will see the 10 categories on their own turn. Name something in each that starts with this letter!</p>
-  <button class="btn btn-primary" onclick="beginPlayerTurns()">Let's Go! →</button>
+  <button class="btn btn-primary" onclick="showPassScreen(0)">Let's Go! →</button>
   <button class="btn btn-ghost btn-sm" style="max-width:220px;margin:4px auto 0" onclick="openStop()">End Game</button>
 </div>
 
@@ -491,7 +486,7 @@
 <!-- FINAL -->
 <div id="screen-final" class="screen">
   <div class="confetti-row">🎉🏆🎉</div>
-  <div class="winner-label">Winner!</div>
+  <div class="winner-label" id="final-label">Winner!</div>
   <div class="winner-name" id="final-winner">Alex</div>
   <div class="winner-score" id="final-wscore">12 points</div>
   <div class="final-scores" id="final-list"></div>
@@ -522,12 +517,12 @@ const CATS_STANDARD = [
   "Fast Food Items","Sushi Types","Ice Cream Flavors","Types of Candy","Cooking Methods",
   // Entertainment
   "Movies","TV Shows","Books","Songs","Video Games","Board Games","Card Games",
-  "Types of Music","Musical Instruments","Musical Genres","Musicals","Podcast Topics",
+  "Types of Music","Musical Instruments","Musicals","Podcast Topics",
   "Streaming Shows","Animated Films","90s TV Shows","Comic Book Characters","Superheroes",
   "Villains","Fairy Tale Characters","Fantasy Creatures","Mythological Creatures",
   // Sports & Activities
   "Sports","Olympic Sports","Hobbies","Dances","Yoga Poses","Things in a Gym",
-  "Extreme Sports","Water Sports","Winter Sports","Ball Sports","Martial Arts","Card Games",
+  "Extreme Sports","Water Sports","Winter Sports","Ball Sports","Martial Arts",
   "Board Game Pieces","Things You Do at a Party","Party Games",
   // Nature & Science
   "Animals","Insects","Dog Breeds","Cat Breeds","Birds","Sea Creatures","Flowers",
@@ -549,7 +544,7 @@ const CATS_STANDARD = [
   "Words That Are Also Names","Adjectives","Things You'd Say at a Restaurant",
   // Jobs & Society
   "Jobs & Careers","School Subjects","Types of Hats","Parts of a Building",
-  "Things in a Hospital","Holiday Traditions","Things at a Wedding","Types of Music Festivals",
+  "Holiday Traditions","Things at a Wedding","Types of Music Festivals",
   "Things in a Library","Historical Events","Religions of the World","Political Terms",
   // Misc
   "Things That Are Red","Things That Are Blue","Things That Are Yellow",
@@ -600,7 +595,7 @@ const CATS_KIDS = [
   "Clothing Items","Things You Wear in Winter","Things You Wear in Summer","Types of Hats",
   "Things in a Dress-Up Box","Shoes","Accessories","Things That Are Colorful",
   // Nature & Weather
-  "Types of Weather","Things You See in the Sky","Things in a Garden","Flowers","Trees",
+  "Types of Weather","Things You See in the Sky","Flowers","Trees",
   "Things You Find on a Walk","Things That Are Green","Things That Grow","Things in a Pond",
   "Things You See at Night","Seasons","Things That Are Shiny","Things Found Underground",
   // Body & Health
@@ -613,11 +608,10 @@ const CATS_KIDS = [
   "Things That Are Hot","Things That Are Fast","Things That Bounce","Things That Are Sticky",
   "Things in a Magic Trick","Things You'd Wish For","Things a Giant Might Have",
   "Things You'd Find in a Treehouse","Things That Make You Smile","Things That Sparkle",
-  "Things in a Pirate's Treasure Chest","Things on a Farm","Holiday Traditions",
+  "Things in a Pirate's Treasure Chest","Holiday Traditions",
   "Birthday Party Supplies","Things You See at Christmas","Things at Halloween",
 ];
 
-const COLORS = ['#ff9f43','#4d96ff','#00d2d3','#c77dff'];
 const PLAYER_COLORS = ['#ff9f43','#ffd93d','#4d96ff','#00d2d3','#c77dff','#fd79a8','#a29bfe','#f368e0'];
 
 // ────────────────────────────────────────────────────
@@ -638,8 +632,11 @@ let G = {
   cats: [],
   playerIdx: 0,
   answers: [],      // [playerIdx][catIdx]
+  usedLetters: [],  // letters already rolled this game
   timerInterval: null,
   timeLeft: 0,
+  paused: false,
+  submitted: false, // guards against double-submit (button + timer)
 };
 
 // ────────────────────────────────────────────────────
@@ -691,7 +688,7 @@ function renderNameFields() {
       `<button class="color-swatch${clr===c?' selected':''}" style="background:${c}" onclick="selectPlayerColor(${i},'${c}')" title="${c}"></button>`
     ).join('');
     html += `<div class="field">
-      <label style="color:${clr}">● Player ${i+1} Name</label>
+      <label for="pn-${i}" style="color:${clr}">● Player ${i+1} Name</label>
       <input type="text" id="pn-${i}" value="${esc(val)}" placeholder="Player ${i+1}" maxlength="18">
       <div class="color-picker">${swatches}</div>
     </div>`;
@@ -716,13 +713,9 @@ function startGame() {
   }
   G.scores = new Array(G.numPlayers).fill(0);
   G.roundScores = [];
+  G.usedLetters = [];
   G.round = 0;
   beginRound();
-}
-
-function resetToSetup() {
-  showScreen('screen-setup');
-  renderNameFields();
 }
 
 // ────────────────────────────────────────────────────
@@ -731,10 +724,12 @@ function resetToSetup() {
 
 function beginRound() {
   G.round++;
-  G.letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+  // No repeat letters within a game (max 5 rounds, 20 letters).
+  const fresh = LETTERS.filter(l => !G.usedLetters.includes(l));
+  G.letter = fresh[Math.floor(Math.random() * fresh.length)];
+  G.usedLetters.push(G.letter);
   const pool = G.categoryMode === 'kids' ? CATS_KIDS : CATS_STANDARD;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  G.cats = shuffled.slice(0, 10);
+  G.cats = shuffle([...new Set(pool)]).slice(0, 10);
   G.answers = Array.from({length: G.numPlayers}, () => new Array(10).fill(''));
   G.playerIdx = 0;
 
@@ -742,10 +737,6 @@ function beginRound() {
   document.getElementById('round-letter').textContent = G.letter;
 
   showScreen('screen-round-start');
-}
-
-function beginPlayerTurns() {
-  showPassScreen(0);
 }
 
 function showPassScreen(pi) {
@@ -801,13 +792,17 @@ function startPlayerTurn() {
 // ────────────────────────────────────────────────────
 
 function startTimer() {
-  clearInterval(G.timerInterval);
   G.timeLeft = G.timerSecs;
   renderTimer();
+  runTimer();
+}
+
+function runTimer() {
+  clearInterval(G.timerInterval);
   G.timerInterval = setInterval(() => {
     G.timeLeft--;
     renderTimer();
-    if (G.timeLeft <= 0) { clearInterval(G.timerInterval); submitAnswers(true); }
+    if (G.timeLeft <= 0) submitAnswers();
   }, 1000);
 }
 
@@ -846,6 +841,7 @@ function showScoringScreen() {
   const body = document.getElementById('scoring-body');
   let html = '';
   const roundLetter = G.letter.toLowerCase();
+  const norm = normAnswer;
 
   // For same-player dupes: track which cat index is the FIRST use of each answer per player.
   // Only subsequent uses (ci > first seen) are flagged as duplicates.
@@ -855,7 +851,7 @@ function showScoringScreen() {
     const flagged = new Set(); // catIdx values that are repeats
     G.answers[pi].forEach((a, ci) => {
       if (!a) return;
-      const k = a.toLowerCase();
+      const k = norm(a);
       if (firstSeen[k] !== undefined) flagged.add(ci);
       else firstSeen[k] = ci;
     });
@@ -870,7 +866,7 @@ function showScoringScreen() {
     // Cross-player duplicates (same answer used by 2+ different players)
     const crossCounts = {};
     rows.forEach(r => {
-      if (r.text) crossCounts[r.text.toLowerCase()] = (crossCounts[r.text.toLowerCase()]||0)+1;
+      if (r.text) crossCounts[norm(r.text)] = (crossCounts[norm(r.text)] || 0) + 1;
     });
 
     html += `<div class="scoring-category">
@@ -879,10 +875,10 @@ function showScoringScreen() {
 
     rows.forEach(r => {
       const empty     = !r.text;
-      const crossDup  = !empty && crossCounts[r.text.toLowerCase()] > 1;
+      const crossDup  = !empty && crossCounts[norm(r.text)] > 1;
       const selfDup   = !empty && !crossDup && selfDupCats[r.pi].has(ci);
       const dup       = crossDup || selfDup;
-      const wrong     = !empty && !dup && !r.text.toLowerCase().startsWith(roundLetter);
+      const wrong     = !empty && !dup && !norm(r.text).startsWith(roundLetter);
       const autoValid = !empty && !dup && !wrong;
       const playerColor = G.colors[r.pi];
 
@@ -949,12 +945,13 @@ function showScoreboard() {
   })).sort((a,b) => b.total - a.total);
 
   const top = sorted[0].total;
+  const ranks = rankOf(sorted);
   let html = '';
-  sorted.forEach((p, rank) => {
+  sorted.forEach((p, k) => {
     const lead = p.total===top && p.total>0;
     const rsStr = p.rr.map((v,ri) => `R${ri+1}: ${v}`).join(' · ');
     html += `<div class="scoreboard-row ${lead?'leader':''}">
-      <div class="rank">${rank===0&&lead?'🏆':rank+1}</div>
+      <div class="rank">${lead?'🏆':ranks[k]}</div>
       <div style="flex:1;min-width:0">
         <div class="sb-name" style="color:${G.colors[p.i]}">${esc(p.n)}</div>
         <div class="sb-round-scores">${rsStr}</div>
@@ -979,20 +976,23 @@ function nextRoundOrEnd() {
 function showFinal() {
   const sorted = G.names.map((n,i)=>({n,i,total:G.scores[i]})).sort((a,b)=>b.total-a.total);
   const w = sorted[0];
-  const tie = sorted.length>1 && sorted[1].total===w.total;
+  const winners = sorted.filter(p => p.total === w.total);
+  const tie = winners.length > 1;
 
+  document.getElementById('final-label').textContent = tie ? 'Winners!' : 'Winner!';
   const wEl = document.getElementById('final-winner');
-  wEl.textContent = tie ? `${w.n} & ${sorted[1].n}` : w.n;
+  wEl.textContent = tie ? listNames(winners.map(p => p.n)) : w.n;
   wEl.style.color = tie ? 'var(--accent2)' : G.colors[w.i];
   document.getElementById('final-wscore').textContent = tie
     ? `Tied at ${w.total} points each!`
     : `${w.total} point${w.total!==1?'s':''} total`;
 
   const medals = ['🥇','🥈','🥉','🏅'];
+  const ranks = rankOf(sorted);
   let html = '';
-  sorted.forEach((p,r) => {
-    html += `<div class="scoreboard-row ${r===0?'leader':''}">
-      <div class="rank">${medals[r]||r+1}</div>
+  sorted.forEach((p,k) => {
+    html += `<div class="scoreboard-row ${ranks[k]===1?'leader':''}">
+      <div class="rank">${medals[ranks[k]-1]||ranks[k]}</div>
       <div class="sb-name" style="color:${G.colors[p.i]}">${esc(p.n)}</div>
       <div class="sb-score">${p.total}</div>
     </div>`;
@@ -1004,6 +1004,31 @@ function showFinal() {
 // ────────────────────────────────────────────────────
 //  UTIL
 // ────────────────────────────────────────────────────
+
+// Fisher–Yates: every order equally likely (sort(() => Math.random() - 0.5) is biased).
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Compare answers ignoring case, extra spaces and surrounding punctuation,
+// so "Jaws", "jaws " and "\"Jaws\"" count as the same answer and the right letter.
+function normAnswer(s) {
+  return s.toLowerCase().replace(/\s+/g, ' ').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+}
+
+// Competition ranking for a list already sorted by total: 10, 10, 7 -> 1, 1, 3.
+function rankOf(sorted) {
+  return sorted.map(p => sorted.findIndex(q => q.total === p.total) + 1);
+}
+
+function listNames(names) {
+  return names.length <= 2 ? names.join(' & ')
+    : names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1];
+}
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1039,12 +1064,7 @@ function pauseGame() {
 function resumeGame() {
   G.paused = false;
   document.getElementById('pause-overlay').classList.remove('active');
-  // Restart the countdown from where it left off
-  G.timerInterval = setInterval(() => {
-    G.timeLeft--;
-    renderTimer();
-    if (G.timeLeft <= 0) { clearInterval(G.timerInterval); submitAnswers(); }
-  }, 1000);
+  runTimer(); // continues from G.timeLeft
 }
 
 // ────────────────────────────────────────────────────
@@ -1070,8 +1090,8 @@ function confirmStop() {
   G.paused = false;
   document.getElementById('modal-stop').classList.remove('active');
   document.getElementById('pause-overlay').classList.remove('active');
-  // If scores exist, show final results; otherwise bail to welcome
-  if (G.scores && G.scores.some(s => s > 0) || G.round > 0) {
+  // Show final results once at least one round has been scored; otherwise back to the menu.
+  if (G.roundScores.length > 0) {
     showFinal();
   } else {
     showScreen('screen-welcome');
