@@ -5,7 +5,8 @@ races the clock to name something in 10 categories that starts with it.
 
 **[jkastl.github.io/scatter](https://jkastl.github.io/scatter/)**
 
-One file, no build step, no dependencies, no network calls. The whole game is
+One file, no build step, no dependencies, no network calls beyond an anonymous visit count
+([GoatCounter](https://www.goatcounter.com/), no cookies). The whole game is
 [`index.html`](index.html), served by GitHub Pages from `main`.
 
 ## How a game works
